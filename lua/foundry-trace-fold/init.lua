@@ -105,39 +105,47 @@ function M.toggle_debug()
   end
 end
 
--- Add command to toggle debug mode
-vim.api.nvim_create_user_command("FoundryFoldDebugToggle", function()
-  M.toggle_debug()
-end, {})
-
 M.foldexpr = 'v:lua.require("foundry-trace-fold").get_fold(v:lnum)'
 
--- Add command to toggle foundry fold
-vim.api.nvim_create_user_command("FoundryFoldToggle", function()
-  local winid = vim.api.nvim_get_current_win()
-  local foldmethod = vim.wo[winid].foldmethod
-  local foldexpr = vim.wo[winid].foldexpr
-
-  if M._cache == nil then
-    M._cache = {}
+function M.setup()
+  local function create_cmd(name, callback)
+    if vim.fn.exists(":" .. name) == 0 then
+      vim.api.nvim_create_user_command(name, callback, {})
+    end
   end
 
-  if foldmethod == "expr" and foldexpr == M.foldexpr then
-    -- restore previous foldmethod and foldexpr
-    local prev_setting = M._cache[winid] or {}
-    if prev_setting.foldmethod then
-      vim.wo[winid].foldmethod = prev_setting.foldmethod
+  -- Add command to toggle debug mode
+  create_cmd("FoundryFoldDebugToggle", function()
+    M.toggle_debug()
+  end)
+
+  -- Add command to toggle foundry fold
+  create_cmd("FoundryFoldToggle", function()
+    local winid = vim.api.nvim_get_current_win()
+    local foldmethod = vim.wo[winid].foldmethod
+    local foldexpr = vim.wo[winid].foldexpr
+
+    if M._cache == nil then
+      M._cache = {}
     end
-    if prev_setting.foldexpr then
-      vim.wo[winid].foldexpr = prev_setting.foldexpr
+
+    if foldmethod == "expr" and foldexpr == M.foldexpr then
+      -- restore previous foldmethod and foldexpr
+      local prev_setting = M._cache[winid] or {}
+      if prev_setting.foldmethod then
+        vim.wo[winid].foldmethod = prev_setting.foldmethod
+      end
+      if prev_setting.foldexpr then
+        vim.wo[winid].foldexpr = prev_setting.foldexpr
+      end
+      M._cache[winid] = nil
+    else
+      -- cache current foldmethod and foldexpr for future toggle
+      M._cache[winid] = { foldmethod = foldmethod, foldexpr = foldexpr }
+      vim.wo[winid].foldmethod = "expr"
+      vim.wo[winid].foldexpr = M.foldexpr
     end
-    M._cache[winid] = nil
-  else
-    -- cache current foldmethod and foldexpr for future toggle
-    M._cache[winid] = { foldmethod = foldmethod, foldexpr = foldexpr }
-    vim.wo[winid].foldmethod = "expr"
-    vim.wo[winid].foldexpr = M.foldexpr
-  end
-end, {})
+  end)
+end
 
 return M
