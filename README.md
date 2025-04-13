@@ -4,7 +4,7 @@ A Neovim plugin that provides smart folding for [Foundry](https://github.com/fou
 
 ## Demo
 
-![Demo](https://i.imgur.com/UN43dSh.mp4)
+https://github.com/user-attachments/assets/cd342b7b-2e4b-47ba-a881-d7f874cce22e
 
 ## Installation
 
